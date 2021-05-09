@@ -9,5 +9,7 @@ public:
 	int z;
 
 	std::string convertToString(int index);
+	std::string convertToString(std::string index);
+
 };
 

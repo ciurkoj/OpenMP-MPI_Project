@@ -7,3 +7,8 @@ std::string Position::convertToString(int index) {
                                   std::to_string(this->y) + ", " + std::to_string(this->z) + "]";
   return convertedToString;
 }
+std::string Position::convertToString(std::string index) {
+  std::string convertedToString = index + "[" + std::to_string(this->x) + ", " +
+                                  std::to_string(this->y) + ", " + std::to_string(this->z) + "]";
+  return convertedToString;
+}
