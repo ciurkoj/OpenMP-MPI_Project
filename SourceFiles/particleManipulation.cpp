@@ -94,6 +94,19 @@ Particle calculateCenterPoint()
     return centerPoint;
 }
 
+double calculateDistance(Particle *particle, Particle *centerPoint){
+    int x1 = particle->currentPosition.x;
+    int x2 = centerPoint->currentPosition.x;
+    int y1 = particle->currentPosition.y;
+    int y2 = centerPoint->currentPosition.y;    
+    int z1 = particle->currentPosition.z;
+    int z2 = centerPoint->currentPosition.z;
+    double x_squared = pow(x1-x2, 2.0);
+    double y_squared = pow(y1-y2, 2.0);
+    double z_squared = pow(z1-z2, 2.0);
+    return sqrt(x_squared + y_squared + z_squared);
+}
+
 void particleManipulation()
 {
     omp_sched_t kind;
@@ -139,7 +152,16 @@ void particleManipulation()
             displayCurrentPosition();
         }
     }
+    std::cout << "Particles around the center point at 50th step:" << std::endl;
     displayCurrentPosition();
+    int n = 1;
+    std::cout << "Distance betweeen a particle and the center point:" << std::endl;
+    for( Particle *particle : particles){
+        
+        double distance_to_center = calculateDistance(particle, &centerPoint);
+        std::cout<<particle->currentPosition.convertToString(n += 1)<<"   \t distance = "<< (int)distance_to_center <<std::endl;
+        n++;
+    }
 
     std::cout << std::endl;
 }
