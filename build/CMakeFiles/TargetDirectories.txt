@@ -1,0 +1,3 @@
+/home/ciurkoj/Documents/6004CEM/Parallel_Element/build/CMakeFiles/rebuild_cache.dir
+/home/ciurkoj/Documents/6004CEM/Parallel_Element/build/CMakeFiles/edit_cache.dir
+/home/ciurkoj/Documents/6004CEM/Parallel_Element/build/CMakeFiles/Parallel.dir

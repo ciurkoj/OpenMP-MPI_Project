@@ -1,0 +1,31 @@
+[
+{
+  "directory": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9     -fopenmp -g   -o CMakeFiles/Parallel.dir/SourceFiles/Position.cpp.o -c /home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/Position.cpp",
+  "file": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/Position.cpp"
+},
+
+{
+  "directory": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9     -fopenmp -g   -o CMakeFiles/Parallel.dir/SourceFiles/ScheduleType.cpp.o -c /home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/ScheduleType.cpp",
+  "file": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/ScheduleType.cpp"
+},
+
+{
+  "directory": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9     -fopenmp -g   -o CMakeFiles/Parallel.dir/SourceFiles/Vector.cpp.o -c /home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/Vector.cpp",
+  "file": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/Vector.cpp"
+},
+
+{
+  "directory": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9     -fopenmp -g   -o CMakeFiles/Parallel.dir/SourceFiles/main.cpp.o -c /home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/main.cpp",
+  "file": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/main.cpp"
+},
+
+{
+  "directory": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/build",
+  "command": "/bin/x86_64-linux-gnu-g++-9     -fopenmp -g   -o CMakeFiles/Parallel.dir/SourceFiles/vectorManipulation.cpp.o -c /home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/vectorManipulation.cpp",
+  "file": "/home/ciurkoj/Documents/6004CEM/Parallel_Element/SourceFiles/vectorManipulation.cpp"
+}
+]
