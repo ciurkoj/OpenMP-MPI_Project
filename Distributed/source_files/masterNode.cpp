@@ -1,12 +1,11 @@
-#include "omp.h"
 #include "mpi.h"
+#include "omp.h"
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <unistd.h>
-#include <fstream>
-#include <cstdlib>
-#include <cstdio>
-
 
 void masterNodeInfo()
 {
