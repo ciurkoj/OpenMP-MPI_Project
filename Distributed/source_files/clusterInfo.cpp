@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <thread>
+#include "globalVariables.h"
 
 std::vector<Node *> nodes;
 std::string getClockSpeed()
@@ -66,57 +67,68 @@ void stats()
 void clusterInfo()
 {
 
-    MPI_Init(NULL, NULL);
-
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
     // Current node's CPU core count and clock speed.
     int node_core_count = omp_get_num_procs();
-    char node_name[MPI_MAX_PROCESSOR_NAME];
     // Reducer for determining total cluster core count.
     int total_core_count = 0;
     std::string clockSpeed;
     const MasterNode *masterNode;
     // masterNodeInfo();
     MPI_Reduce(&node_core_count, &total_core_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (world_rank == 0)
+    memset(processor_name + name_len, 0, MPI_MAX_PROCESSOR_NAME - name_len);
+    char letter[30];
+    char mesg[] = "heeenlo :P";
+    int source = 0;
+    int destination = 2;
+    if (PROCESS_RANK == 0)
     {
-        masterNode = new MasterNode(processor_name, world_size, "  ", 1, total_core_count);
+      
+        masterNode = new MasterNode(processor_name, CLUSTER_SIZE, "  ", 1, total_core_count);
+        // std::cout<<MPI_COMM_WORLD<<std::endl;
+        std::cout << "Total cluster core count: " << masterNode->nodeCount << "\n";
+        std::cout << "Total node count: " <<masterNode->coreNumber  << " nodes\n";
+        std::cout << "Master node: " << masterNode->processor_name << '\n';
+
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        //  std::cout << "> hello from "<< processor_name<< std::endl; //standard debugging code, remove later
+    //   MPI_Send(&mesg,strlen(mesg)+1, MPI_CHAR, destination, 10, MPI_COMM_WORLD); 
+
     }
+    // else if (PROCESS_RANK == destination){
+    // // char local_letter = 'z'; // just so we can be certain it's local to this node, and it's initialised with z, so we'll know if nothing's happening.
+    //  // this of course means you can't use z.
+    //  std::cout << "> hello from "<< processor_name<< std::endl; //standard debugging code, remove later
+
+    //  MPI_Recv(&letter, 30, MPI_CHAR, source, 10, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    //  std::cout << "> Character: " << letter << " Received by "<< processor_name<< std::endl;
+    // }
     else
     {
         clockSpeed = run("cat /proc/cpuinfo | grep \"cpu MHz\"");
         int numberOfCoresPerNode = std::thread::hardware_concurrency();
         std::string core_clock_speed = getClockSpeed();
         long RAM = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
-
         nodes.push_back(new Node(processor_name, numberOfCoresPerNode, clockSpeed, RAM));
         // std::cout << processor_name << " - RAM: " << RAM << '\n';
     }
 
-    //  std::cout << "Total cluster core count: " << masterNode->nodeCount << "\n";
-    // std::cout << "Total node count: " <<masterNode->coreNumber  << " nodes\n";
-    // std::cout << "Master node: " << masterNode->processor_name << '\n';
     for (Node *node : nodes)
     {
-        std::cout << "*********" << std::endl;
+        std::cout << "*********" << std::endl << "*********" << std::endl;
         std::cout << "Node name: " << node->processor_name << std::endl;
         std::cout << "Core number: " << node->coreNumber << std::endl;
         std::cout << "Core clock speed:" << std::endl
                   << node->core_clock_speed;
         std::cout << "Ram memory: " << node->memory / 1000 / 1000 / 1000 << "GB" << std::endl;
-        std::cout << "*********" << std::endl;
+        
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-    MPI_Finalize();
+
 
     // stats();
     // Determine physical memory size
