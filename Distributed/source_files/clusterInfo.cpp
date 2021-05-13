@@ -1,19 +1,18 @@
 #include "./clusterInfo.h"
 #include "./Node.cpp"
 #include "./masterNode.h"
+#include "globalVariables.h"
 #include "mpi.h"
 #include "omp.h"
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <vector>
-#include <cstdlib>
-#include <sstream>
-#include <thread>
-#include "globalVariables.h"
 
 std::vector<Node *> nodes;
 std::string getClockSpeed()
@@ -86,18 +85,17 @@ void clusterInfo()
     int destination = 2;
     if (PROCESS_RANK == 0)
     {
-      
+
         masterNode = new MasterNode(processor_name, CLUSTER_SIZE, "  ", 1, total_core_count);
         // std::cout<<MPI_COMM_WORLD<<std::endl;
         std::cout << "Total cluster core count: " << masterNode->nodeCount << "\n";
-        std::cout << "Total node count: " <<masterNode->coreNumber  << " nodes\n";
+        std::cout << "Total node count: " << masterNode->coreNumber << " nodes\n";
         std::cout << "Master node: " << masterNode->processor_name << '\n';
 
         MPI_Barrier(MPI_COMM_WORLD);
 
         //  std::cout << "> hello from "<< processor_name<< std::endl; //standard debugging code, remove later
-    //   MPI_Send(&mesg,strlen(mesg)+1, MPI_CHAR, destination, 10, MPI_COMM_WORLD); 
-
+        //   MPI_Send(&mesg,strlen(mesg)+1, MPI_CHAR, destination, 10, MPI_COMM_WORLD);
     }
     // else if (PROCESS_RANK == destination){
     // // char local_letter = 'z'; // just so we can be certain it's local to this node, and it's initialised with z, so we'll know if nothing's happening.
@@ -119,16 +117,16 @@ void clusterInfo()
 
     for (Node *node : nodes)
     {
-        std::cout << "*********" << std::endl << "*********" << std::endl;
+        std::cout << "*********" << std::endl
+                  << "*********" << std::endl;
         std::cout << "Node name: " << node->processor_name << std::endl;
         std::cout << "Core number: " << node->coreNumber << std::endl;
         std::cout << "Core clock speed:" << std::endl
                   << node->core_clock_speed;
         std::cout << "Ram memory: " << node->memory / 1000 / 1000 / 1000 << "GB" << std::endl;
-        
+
         MPI_Barrier(MPI_COMM_WORLD);
     }
-
 
     // stats();
     // Determine physical memory size
