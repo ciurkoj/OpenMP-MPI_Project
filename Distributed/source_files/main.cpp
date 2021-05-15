@@ -13,12 +13,24 @@ int main(int argc, char **argv)
     if (PROCESS_RANK == MASTER_RANK)
     {
         headNode();
-        MPI_Barrier(MPI_COMM_WORLD);
+        // MPI_Barrier(MPI_COMM_WORLD);
     }
     else
     {
         clusterNode(PROCESS_RANK);
-        MPI_Barrier(MPI_COMM_WORLD);
+        // MPI_Barrier(MPI_COMM_WORLD);
     }
+    // switch(PROCESS_RANK){
+    //     case MASTER_RANK:
+    //     {
+    //         headNode();
+    //         MPI_Barrier(MPI_COMM_WORLD);
+    //     }
+    //     default:
+    //     {
+    //     clusterNode(PROCESS_RANK);
+        // MPI_Barrier(MPI_COMM_WORLD);
+    //     }
+    // }
     finalize();
 }

@@ -1,6 +1,5 @@
 #include "./clusterInfo.h"
 #include "./Node.cpp"
-#include "./masterNode.h"
 #include "globalVariables.h"
 #include "mpi.h"
 #include "omp.h"
