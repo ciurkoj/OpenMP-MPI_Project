@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     //     default:
     //     {
     //     clusterNode(PROCESS_RANK);
-        // MPI_Barrier(MPI_COMM_WORLD);
+    // MPI_Barrier(MPI_COMM_WORLD);
     //     }
     // }
     finalize();

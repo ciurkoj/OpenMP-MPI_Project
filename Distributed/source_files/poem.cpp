@@ -1,12 +1,12 @@
 #include "poem.h"
 #include "globalVariables.h"
+#include "message.h"
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
 #include <sstream>
 #include <string>
 #include <vector>
-#include "message.h"
 
 // read the poem and cast it into a vector
 std::vector<std::string> readPoemLines()
@@ -39,37 +39,37 @@ void linesToBeExpected(int totalNumberOfLines)
     }
 }
 
-MPI_Datatype create_message_data_type(){
-        MPI_Datatype message_type;
-        int lengths[3] = { 1, 1, 50 };
+MPI_Datatype create_message_data_type()
+{
+    MPI_Datatype message_type;
+    int lengths[3] = {1, 1, 50};
 
-        MPI_Aint displacements[3];
-        struct message_t message;
-        MPI_Aint base_address;
-        MPI_Get_address(&message, &base_address);
-        MPI_Get_address(&message.node, &displacements[0]);
-        MPI_Get_address(&message.index, &displacements[1]);
-        MPI_Get_address(&message.line[0], &displacements[2]);
-        displacements[0] = MPI_Aint_diff(displacements[0], base_address);
-        displacements[1] = MPI_Aint_diff(displacements[1], base_address);
-        displacements[2] = MPI_Aint_diff(displacements[2], base_address);
-    
-        MPI_Datatype types[3] = { MPI_INT, MPI_INT, MPI_CHAR };
-        MPI_Type_create_struct(3, lengths, displacements, types, &message_type);
-        MPI_Type_commit(&message_type);
-        return message_type;
+    MPI_Aint displacements[3];
+    struct message_t message;
+    MPI_Aint base_address;
+    MPI_Get_address(&message, &base_address);
+    MPI_Get_address(&message.node, &displacements[0]);
+    MPI_Get_address(&message.index, &displacements[1]);
+    MPI_Get_address(&message.line[0], &displacements[2]);
+    displacements[0] = MPI_Aint_diff(displacements[0], base_address);
+    displacements[1] = MPI_Aint_diff(displacements[1], base_address);
+    displacements[2] = MPI_Aint_diff(displacements[2], base_address);
+
+    MPI_Datatype types[3] = {MPI_INT, MPI_INT, MPI_CHAR};
+    MPI_Type_create_struct(3, lengths, displacements, types, &message_type);
+    MPI_Type_commit(&message_type);
+    return message_type;
 };
- 
+
 void sendLineToSlave(const int slave, const std::string line, int lineIndex)
 {
-        MPI_Datatype message_type = create_message_data_type();
-        struct message_t buffer;
-        buffer.node = slave;
-        buffer.index = lineIndex;
-        strncpy(buffer.line, line.c_str(), 50);
-        buffer.line[50] = '\0';
-        MPI_Send(&buffer, 1, message_type, slave, TAG_LINE, MPI_COMM_WORLD);
-
+    MPI_Datatype message_type = create_message_data_type();
+    struct message_t buffer;
+    buffer.node = slave;
+    buffer.index = lineIndex;
+    strncpy(buffer.line, line.c_str(), 50);
+    buffer.line[50] = '\0';
+    MPI_Send(&buffer, 1, message_type, slave, TAG_LINE, MPI_COMM_WORLD);
 }
 
 void distributeLines(std::vector<std::string> lines)
@@ -92,8 +92,6 @@ void distributeLines(std::vector<std::string> lines)
         }
     }
 }
-
- 
 
 void headNode()
 {
@@ -134,7 +132,8 @@ void clusterNode(int clusterRank)
         MPI_Recv(&received_message, 1, message_type, MASTER_RANK, TAG_LINE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         messages.push_back(received_message);
     }
-    for (message_t message : messages){
+    for (message_t message : messages)
+    {
         printf("From node: %d retceived message:\t-to node= %d\t- line index= %d\t- poem line= %s\n", clusterRank, message.node, message.index, message.line);
     }
 

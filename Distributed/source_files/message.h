@@ -4,4 +4,3 @@ struct message_t
     int index;
     char line[50];
 };
- 
