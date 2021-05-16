@@ -1,6 +1,6 @@
 #include "poem.h"
 #include "globalVariables.h"
-#include "message.h"
+// #include "message.h"
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
@@ -61,15 +61,15 @@ MPI_Datatype create_message_data_type()
     return message_type;
 };
 
-void sendLineToSlave(const int slave, const std::string line, int lineIndex)
+void sendLine(const int node, const std::string line, int lineIndex ,int tag)
 {
     MPI_Datatype message_type = create_message_data_type();
     struct message_t buffer;
-    buffer.node = slave;
+    buffer.node = node;
     buffer.index = lineIndex;
     strncpy(buffer.line, line.c_str(), 50);
     buffer.line[50] = '\0';
-    MPI_Send(&buffer, 1, message_type, slave, TAG_LINE, MPI_COMM_WORLD);
+    MPI_Send(&buffer, 1, message_type, node, tag, MPI_COMM_WORLD);
 }
 
 void distributeLines(std::vector<std::string> lines)
@@ -87,10 +87,17 @@ void distributeLines(std::vector<std::string> lines)
             {
                 break;
             }
-            sendLineToSlave(slave, lines.at(lineIndex), lineIndex + 1);
+            sendLine(slave, lines.at(lineIndex), lineIndex + 1, TAG_LINE);
             lineIndex++;
         }
     }
+}
+message_t getMessage(int tag, int node)
+{
+    MPI_Datatype message_type = create_message_data_type();
+    struct message_t received_message;
+    MPI_Recv(&received_message, 1, message_type, node, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    return received_message;
 }
 
 void headNode()
@@ -99,6 +106,18 @@ void headNode()
     linesToBeExpected(lines.size());
     distributeLines(lines);
     MPI_Barrier(MPI_COMM_WORLD);
+    std::cout<<std::endl;
+    std::vector<message_t> gatheredMessages;
+    for (int i=1;i<25;i++){
+        
+    message_t message;
+    message = getMessage(TAG_LINE_TO_HEAD_NODE, MPI_ANY_SOURCE);
+    gatheredMessages.push_back(message);
+    }
+
+    for (message_t message : gatheredMessages){
+        std::cout<<message.index<<". "<<message.line<<std::endl;
+    }
 }
 
 int getNumberOfLines()
@@ -108,35 +127,19 @@ int getNumberOfLines()
     return numberOfLines;
 }
 
-std::string receivePoemLine()
-{
-    MPI_Status mpi_status;
-    MPI_Probe(MASTER_RANK, TAG_LINE, MPI_COMM_WORLD, &mpi_status);
-    int count;
-    MPI_Get_count(&mpi_status, MPI_CHAR, &count);
-    char *buffer = (char *)malloc(sizeof(char) * count + 1);
-    MPI_Recv(buffer, count, MPI_CHAR, MASTER_RANK, TAG_LINE, MPI_COMM_WORLD, &mpi_status);
-    std::string receivedLine(buffer);
-    free(buffer);
-    return receivedLine;
-}
-
 void clusterNode(int clusterRank)
 {
     std::vector<message_t> messages;
     int numberOfLines = getNumberOfLines();
     for (int lineNumber = 0; lineNumber < numberOfLines; lineNumber++)
     {
-        MPI_Datatype message_type = create_message_data_type();
-        struct message_t received_message;
-        MPI_Recv(&received_message, 1, message_type, MASTER_RANK, TAG_LINE, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        message_t received_message = getMessage(TAG_LINE, MASTER_RANK);
         messages.push_back(received_message);
     }
+
     for (message_t message : messages)
     {
-        printf("From node: %d retceived message:\t-to node= %d\t- line index= %d\t- poem line= %s\n", clusterRank, message.node, message.index, message.line);
+        sendLine(MASTER_RANK,message.line,message.index, TAG_LINE_TO_HEAD_NODE);
     }
-
     MPI_Barrier(MPI_COMM_WORLD);
-    std::cout << std::endl;
 }
