@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string.h>
 #include <string>
 #include <thread>
 #include <unistd.h>
@@ -21,8 +22,9 @@ std::vector<std::string> getClockSpeed()
     // Find the line where the clock speed is listed.
     while (getline(cpuInfo, clockSpeed))
     {
-        if (clockSpeed.find("cpu MHz", 0) != std::string::npos){
-        speeds.push_back(clockSpeed);
+        if (clockSpeed.find("cpu MHz", 0) != std::string::npos)
+        {
+            speeds.push_back(clockSpeed);
         }
     }
     cpuInfo.close();
@@ -78,41 +80,36 @@ void clusterInfo()
     const MasterNode *masterNode;
     MPI_Reduce(&node_core_count, &total_core_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     memset(processor_name + name_len, 0, MPI_MAX_PROCESSOR_NAME - name_len);
-    char letter[30];
-    char mesg[] = "heeenlo :P";
-    int source = 0;
-    int destination = 2;
+
     if (PROCESS_RANK == 0)
     {
 
         masterNode = new MasterNode(processor_name, CLUSTER_SIZE, "  ", 1, total_core_count);
-        // std::cout<<MPI_COMM_WORLD<<std::endl;
         std::cout << "Total cluster core count: " << masterNode->nodeCount << "\n";
         std::cout << "Total node count: " << masterNode->coreNumber << " nodes\n";
         std::cout << "Master node: " << masterNode->processor_name << '\n';
 
         MPI_Barrier(MPI_COMM_WORLD);
-
-
     }
 
-    else 
+    else
     {
         clockSpeed = run("cat /proc/cpuinfo | grep \"cpu MHz\"");
         int numberOfCoresPerNode = std::thread::hardware_concurrency();
         std::vector<std::string> core_clock_speed = getClockSpeed();
         long RAM = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
 
-            std::cout << "*********" << std::endl
-                    << "*********" << std::endl;
-            std::cout << "Node name: " << processor_name << std::endl;
-            std::cout << "Core number: " << numberOfCoresPerNode<< std::endl;
-            std::cout << "Core clock speed:";
-            for (std::vector<std::string>::iterator it = core_clock_speed.begin() ; it != core_clock_speed.end(); ++it){
-                std::cout << "\n " << *it;
-            }
-            std::cout << "\nRam memory: " << RAM / 1000 / 1000 / 1000 << "GB" << std::endl;
+        std::cout << "*********" << std::endl
+                  << "*********" << std::endl;
+        std::cout << "Node name: " << processor_name << std::endl;
+        std::cout << "Core number: " << numberOfCoresPerNode << std::endl;
+        std::cout << "Core clock speed:";
+        for (std::vector<std::string>::iterator it = core_clock_speed.begin(); it != core_clock_speed.end(); ++it)
+        {
+            std::cout << "\n " << *it;
+        }
+        std::cout << "\nRam memory: " << RAM / 1000 / 1000 / 1000 << "GB" << std::endl;
 
-            MPI_Barrier(MPI_COMM_WORLD);
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 }

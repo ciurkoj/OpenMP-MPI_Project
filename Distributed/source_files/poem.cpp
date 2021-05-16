@@ -1,6 +1,6 @@
 #include "poem.h"
 #include "globalVariables.h"
-// #include "message.h"
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <mpi.h>
@@ -8,7 +8,9 @@
 #include <string>
 #include <vector>
 
-// read the poem and cast it into a vector
+/** readPoemLines reads poem into the program memory
+ * @return Poem split into a vector of strings.
+ */
 std::vector<std::string> readPoemLines()
 {
     std::vector<std::string> mPoemLines;
@@ -24,6 +26,11 @@ std::vector<std::string> readPoemLines()
     file.close();
     return mPoemLines;
 };
+
+/** linesToBeExpected calculate how many lines a node should expect
+ * @param totalNumberOfLines an integer of total number of lines in the original text input
+ * @return MPI_Send sends a number of lines to expect of a type MPI_INT 
+ */
 void linesToBeExpected(int totalNumberOfLines)
 {
     for (int slave = 1; slave <= SLAVE_COUNT; slave++)
@@ -39,7 +46,10 @@ void linesToBeExpected(int totalNumberOfLines)
     }
 }
 
-MPI_Datatype create_message_data_type()
+/** createMessageDataType creates a custom MPI data type that is sent to other node.
+ * @return custom MPI_Datatype message type
+ */
+MPI_Datatype createMessageDataType()
 {
     MPI_Datatype message_type;
     int lengths[3] = {1, 1, 50};
@@ -61,9 +71,16 @@ MPI_Datatype create_message_data_type()
     return message_type;
 };
 
-void sendLine(const int node, const std::string line, int lineIndex ,int tag)
+/** Sends line between nodes.
+ * @param node is a recipient of the message,
+ * @param line is a string type of the message,
+ * @param lineIndex is a line index in the original poem.
+ * @param tag is a message identifier.
+ * @return Sends message of a message_t datatype with MPI_Send
+ */
+void sendLine(const int node, const std::string line, int lineIndex, int tag)
 {
-    MPI_Datatype message_type = create_message_data_type();
+    MPI_Datatype message_type = createMessageDataType();
     struct message_t buffer;
     buffer.node = node;
     buffer.index = lineIndex;
@@ -72,14 +89,18 @@ void sendLine(const int node, const std::string line, int lineIndex ,int tag)
     MPI_Send(&buffer, 1, message_type, node, tag, MPI_COMM_WORLD);
 }
 
+/** distributeLines sends each line in the lines vector to the cluster nodes.
+ * @param lines is a vector of the original poem lines
+ * @return distributes lines between nodes, except for head node.
+ */
 void distributeLines(std::vector<std::string> lines)
 {
     size_t lineIndex = 0;
     for (std::string line : lines)
     {
-        for (int slave = 0; slave < CLUSTER_SIZE; slave++)
+        for (int cluster_node = 0; cluster_node < CLUSTER_SIZE; cluster_node++)
         {
-            if (slave == MASTER_RANK)
+            if (cluster_node == MASTER_RANK)
             {
                 continue;
             }
@@ -87,39 +108,58 @@ void distributeLines(std::vector<std::string> lines)
             {
                 break;
             }
-            sendLine(slave, lines.at(lineIndex), lineIndex + 1, TAG_LINE);
+            sendLine(cluster_node, lines.at(lineIndex), lineIndex + 1, TAG_LINE);
             lineIndex++;
         }
     }
 }
+
+/** Gets messages from specified node
+ * @param tag is a message tag identifier.
+ * @param node is a sender from whom to expect the message
+ * @return received_message of a struct message_t, is a custom data type message.
+ */
 message_t getMessage(int tag, int node)
 {
-    MPI_Datatype message_type = create_message_data_type();
+    MPI_Datatype message_type = createMessageDataType();
     struct message_t received_message;
     MPI_Recv(&received_message, 1, message_type, node, tag, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     return received_message;
 }
 
+/** headNode() manages poem distribution and collection, then prints out the poem from received messages.
+ */
 void headNode()
 {
     std::vector<std::string> lines = readPoemLines();
     linesToBeExpected(lines.size());
     distributeLines(lines);
     MPI_Barrier(MPI_COMM_WORLD);
-    std::cout<<std::endl;
+    std::cout << std::endl;
+
+    /** Collect all messages sent by cluster nodes 
+     * @param gatheredMessages A vector container of all messages received from cluster nodes.
+     */
     std::vector<message_t> gatheredMessages;
-    for (int i=0;i<lines.size();i++){
-        
-    message_t message;
-    message = getMessage(TAG_LINE_TO_HEAD_NODE, MPI_ANY_SOURCE);
-    gatheredMessages.push_back(message);
+    for (int i = 0; i < lines.size(); i++)
+    {
+        message_t message;
+        message = getMessage(TAG_LINE_TO_HEAD_NODE, MPI_ANY_SOURCE);
+        gatheredMessages.push_back(message);
     }
 
-    for (message_t message : gatheredMessages){
-        std::cout<<message.index<<". "<<message.line<<std::endl;
+    /* Print out all messages */
+    for (message_t message : gatheredMessages)
+    {
+        std::cout << message.index << ". " << message.line << std::endl;
     }
 }
 
+/** getNumberOfLines() get a message with information about how many lines of poem to expect
+ * Uses MPI_Recv with a tag "TAG_NUMBER_OF_LINES" to identify the correct message
+ * Sender is set to MASTER_RANK, as the information comes from the head node.
+ * @return An integer how many lines to expect 
+ */
 int getNumberOfLines()
 {
     int numberOfLines = 0;
@@ -127,6 +167,8 @@ int getNumberOfLines()
     return numberOfLines;
 }
 
+/** clusterNode() receives messages from the head node ands sends back received lines.
+ */
 void clusterNode(int clusterRank)
 {
     std::vector<message_t> messages;
@@ -139,7 +181,7 @@ void clusterNode(int clusterRank)
 
     for (message_t message : messages)
     {
-        sendLine(MASTER_RANK,message.line,message.index, TAG_LINE_TO_HEAD_NODE);
+        sendLine(MASTER_RANK, message.line, message.index, TAG_LINE_TO_HEAD_NODE);
     }
     MPI_Barrier(MPI_COMM_WORLD);
 }
