@@ -3,14 +3,17 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/Parallel_Programming_Portfolio/Distributed/source_files/*",
+                "${workspaceFolder}/Parallel_Programming_Portfolio/Distributed/source_files/headers/*"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "gnu17",
-            "cppStandard": "gnu++14",
+            "cppStandard": "gnu++11",
             "intelliSenseMode": "linux-gcc-x64",
             "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+            
+
         }
     ],
     "version": 4
