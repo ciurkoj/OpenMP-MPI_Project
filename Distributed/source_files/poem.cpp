@@ -108,7 +108,7 @@ void headNode()
     MPI_Barrier(MPI_COMM_WORLD);
     std::cout<<std::endl;
     std::vector<message_t> gatheredMessages;
-    for (int i=1;i<25;i++){
+    for (int i=0;i<lines.size();i++){
         
     message_t message;
     message = getMessage(TAG_LINE_TO_HEAD_NODE, MPI_ANY_SOURCE);

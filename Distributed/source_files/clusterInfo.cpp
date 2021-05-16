@@ -13,20 +13,21 @@
 #include <unistd.h>
 #include <vector>
 
-std::vector<Node *> nodes;
-std::string getClockSpeed()
+std::vector<std::string> getClockSpeed()
 {
     std::ifstream cpuInfo("/proc/cpuinfo");
     std::string clockSpeed;
+    std::vector<std::string> speeds;
     // Find the line where the clock speed is listed.
     while (getline(cpuInfo, clockSpeed))
     {
-        if (clockSpeed.find("cpu MHz", 0) != std::string::npos)
-            break;
+        if (clockSpeed.find("cpu MHz", 0) != std::string::npos){
+        speeds.push_back(clockSpeed);
+        }
     }
     cpuInfo.close();
     // Return the first line containing CPU clock speeds.
-    return clockSpeed.substr(clockSpeed.find(':') + 1);
+    return speeds;
 }
 
 const char *fileName = "output.txt";
@@ -75,7 +76,6 @@ void clusterInfo()
     int total_core_count = 0;
     std::string clockSpeed;
     const MasterNode *masterNode;
-    // masterNodeInfo();
     MPI_Reduce(&node_core_count, &total_core_count, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
     memset(processor_name + name_len, 0, MPI_MAX_PROCESSOR_NAME - name_len);
     char letter[30];
@@ -93,40 +93,26 @@ void clusterInfo()
 
         MPI_Barrier(MPI_COMM_WORLD);
 
-        //  std::cout << "> hello from "<< processor_name<< std::endl; //standard debugging code, remove later
-        //   MPI_Send(&mesg,strlen(mesg)+1, MPI_CHAR, destination, 10, MPI_COMM_WORLD);
-    }
-    // else if (PROCESS_RANK == destination){
-    // // char local_letter = 'z'; // just so we can be certain it's local to this node, and it's initialised with z, so we'll know if nothing's happening.
-    //  // this of course means you can't use z.
-    //  std::cout << "> hello from "<< processor_name<< std::endl; //standard debugging code, remove later
 
-    //  MPI_Recv(&letter, 30, MPI_CHAR, source, 10, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    //  std::cout << "> Character: " << letter << " Received by "<< processor_name<< std::endl;
-    // }
-    else
+    }
+
+    else 
     {
         clockSpeed = run("cat /proc/cpuinfo | grep \"cpu MHz\"");
         int numberOfCoresPerNode = std::thread::hardware_concurrency();
-        std::string core_clock_speed = getClockSpeed();
+        std::vector<std::string> core_clock_speed = getClockSpeed();
         long RAM = sysconf(_SC_PHYS_PAGES) * sysconf(_SC_PAGESIZE);
-        nodes.push_back(new Node(processor_name, numberOfCoresPerNode, clockSpeed, RAM));
-        // std::cout << processor_name << " - RAM: " << RAM << '\n';
+
+            std::cout << "*********" << std::endl
+                    << "*********" << std::endl;
+            std::cout << "Node name: " << processor_name << std::endl;
+            std::cout << "Core number: " << numberOfCoresPerNode<< std::endl;
+            std::cout << "Core clock speed:";
+            for (std::vector<std::string>::iterator it = core_clock_speed.begin() ; it != core_clock_speed.end(); ++it){
+                std::cout << "\n " << *it;
+            }
+            std::cout << "\nRam memory: " << RAM / 1000 / 1000 / 1000 << "GB" << std::endl;
+
+            MPI_Barrier(MPI_COMM_WORLD);
     }
-
-    for (Node *node : nodes)
-    {
-        std::cout << "*********" << std::endl
-                  << "*********" << std::endl;
-        std::cout << "Node name: " << node->processor_name << std::endl;
-        std::cout << "Core number: " << node->coreNumber << std::endl;
-        std::cout << "Core clock speed:" << std::endl
-                  << node->core_clock_speed;
-        std::cout << "Ram memory: " << node->memory / 1000 / 1000 / 1000 << "GB" << std::endl;
-
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
-
-    // stats();
-    // Determine physical memory size
 }
